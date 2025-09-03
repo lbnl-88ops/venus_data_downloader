@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Date Range Picker</title>
+     <style>
+        body { font-family: Arial, sans-serif; margin: 2rem; }
+        .error { color: red; }
+        label { display: block; margin-top: 1rem; }
+        select { width: 100%; height: 8rem; }
+        button { margin-top: 1.5rem; padding: 0.5rem 1rem; }
+    </style>
+</head>
+<body>
+    {% if error %}
+        <p class="error">{{ error }}</p>
+    {% endif %}
+
+    <h1>Select Date Range</h1>
+    <form method="POST">
+        <label for="start_date">Start Date:</label>
+        <input type="date" id="start_date" name="start_date" value="{{ start_date if start_date else '' }}"><br><br>
+
+        <label for="end_date">End Date:</label>
+        <input type="date" id="end_date" name="end_date" value="{{ end_date if end_date else '' }}"><br><br>
+
+        <div>
+            {{ form.selected_options.label }}
+            {{ form.selected_options(multiple=True) }}
+        </div>
+        <button type="submit">Download CSV</button>
+    </form>
+</body>
+</html>
