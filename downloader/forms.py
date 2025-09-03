@@ -27,6 +27,7 @@ CHOICES = [
     ('lt_oven_1_temp', 'Low temperature oven 1 temperature'),
     ('lt_oven_2_temp', 'Low temperature oven 2 temperature'),
 ]
+
 class DataSelectionForm(FlaskForm):
     # Define choices as a list of tuples: (value, label)
     choices = CHOICES
