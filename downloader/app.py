@@ -6,20 +6,14 @@ from datetime import datetime
 from typing import List
 
 FMT = '%Y-%m-%d %H:%M:%S'
+DATA_LOCATION = Path('./data/venus')
 
-def create_app(test_config=None):
+def create_app():
     # create and configure the app
     app = Flask(__name__, instance_relative_config=True)
     app.config.from_mapping(
         SECRET_KEY='dev',
     )
-
-    if test_config is None:
-        # load the instance config, if it exists, when not testing
-        app.config.from_pyfile('config.py', silent=True)
-    else:
-        # load the test config if passed in
-        app.config.from_mapping(test_config)
 
     @app.route('/', methods=['GET', 'POST'])
     def index():
@@ -47,8 +41,7 @@ def create_app(test_config=None):
     return app
 
 def validate_and_save_data(selected_data: List[str], start: datetime, stop: datetime) -> None | ValueError:
-    data_location = Path('../ecris.analysis/data/venus')
-    data = get_venus_data(data_location, selected_data, start, stop)
+    data = get_venus_data(DATA_LOCATION, selected_data, start, stop)
     data.to_csv('data.csv', index=False)
 
 
