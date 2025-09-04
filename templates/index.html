@@ -20,10 +20,10 @@
 
     <h1>VENUS Data Downloader</h1>
     <form method="POST">
-        <label for="start_date">Start Date:</label>
-        <input type="date" id="start_date" name="start_date" value="{{ start_date if start_date else '' }}">
-        <label for="end_date">End Date:</label>
-        <input type="date" id="end_date" name="end_date" value="{{ end_date if end_date else '' }}"><br><br>
+        <div>
+            {{ date_form.start_date.label}} {{date_form.start_date}}
+            {{ date_form.end_date.label}} {{date_form.end_date}}
+        </div>
 
         <div class="selector">
             {{ form.selected_options.label }}

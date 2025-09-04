@@ -1,6 +1,6 @@
 from pathlib import Path
 from flask import Flask, render_template_string, request, render_template, send_file
-from forms import DataSelectionForm
+from forms import DataSelectionForm, DateSelectionForm
 from ops.ecris.analysis.venus_data import get_venus_data
 from datetime import datetime
 from typing import List
@@ -17,41 +17,32 @@ def create_app():
 
     @app.route('/', methods=['GET', 'POST'])
     def index():
-        form = DataSelectionForm()
+        data_select = DataSelectionForm()
+        date_select = DateSelectionForm()
+
         if request.method == 'POST':
-            start_date = request.form.get('start_date')
-            end_date = request.form.get('end_date')
-            selected_data = form.selected_options.data
+            start_date = date_select.start_date.data
+            end_date = date_select.end_date.data
+            selected_data = data_select.selected_options.data
 
             try:
                 validate_and_save_data(selected_data, start_date, end_date)
                 return send_file('../data.csv', mimetype='text/csv', as_attachment=True)
             except ValueError as exc:
                 return render_template('index.html', error=f'Error: {exc}', 
-                                        start_date=start_date, end_date=end_date,
-                                        form=form)
+                                        date_form=date_select,
+                                        form=data_select)
 
         start_date = None
         end_date = None
-        return render_template('index.html', start_date=start_date, end_date=end_date, error='',
-                               form=form)
+        return render_template('index.html', date_form=date_select,
+                               error='',
+                               form=data_select)
 
     return app
 
-def validate_and_save_data(selected_data: List[str], start_date: str, end_date: str) -> None | ValueError:
-    try:
-        start = datetime.strptime(f'{start_date} 0:0:0', FMT)
-    except ValueError:
-        raise ValueError(f'Start date {start_date} is invalid')
-    try:
-        stop = datetime.strptime(f'{end_date} 23:59:00', FMT)
-    except ValueError:
-        raise ValueError(f'End date {end_date} is invalid')
-    if start > stop:
-        raise ValueError('Start date must be before end date')
-    if not selected_data:
-        raise ValueError('No data selected')
-    data = get_venus_data(DATA_LOCATION, selected_data, start, stop)
+def validate_and_save_data(selected_data: List[str], start_date: datetime, end_date: datetime) -> None | ValueError:
+    data = get_venus_data(DATA_LOCATION, selected_data, start_date, end_date)
     data.to_csv('data.csv', index=False)
 
 

@@ -1,6 +1,6 @@
 from flask_wtf import FlaskForm
-from wtforms import SelectMultipleField
-from wtforms.validators import DataRequired
+from wtforms import SelectMultipleField, DateTimeLocalField, ValidationError
+from wtforms.validators import DataRequired, InputRequired
 
 CHOICES = [
     ('inj_mbar', 'Vacuum, injection'),
@@ -32,3 +32,12 @@ class DataSelectionForm(FlaskForm):
     # Define choices as a list of tuples: (value, label)
     choices = CHOICES
     selected_options = SelectMultipleField('Data requested', choices=choices, validators=[DataRequired()])
+
+def before_start(field, form):
+    if field.data <= form.start_date.data:
+        return ValidationError('End time must be after start.')
+
+class DateSelectionForm(FlaskForm):
+
+    start_date = DateTimeLocalField('Start', validators=[InputRequired()])
+    end_date = DateTimeLocalField('End', validators=[InputRequired(), before_start])
