@@ -33,11 +33,7 @@ class DataSelectionForm(FlaskForm):
     choices = CHOICES
     selected_options = SelectMultipleField('Data requested', choices=choices, validators=[DataRequired()])
 
-def before_start(field, form):
-    if field.data <= form.start_date.data:
-        return ValidationError('End time must be after start.')
 
 class DateSelectionForm(FlaskForm):
-
     start_date = DateTimeLocalField('Start', validators=[InputRequired()])
-    end_date = DateTimeLocalField('End', validators=[InputRequired(), before_start])
+    end_date = DateTimeLocalField('End', validators=[InputRequired()])

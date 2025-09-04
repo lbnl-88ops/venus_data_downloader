@@ -27,14 +27,12 @@ def create_app():
 
             try:
                 validate_and_save_data(selected_data, start_date, end_date)
-                return send_file('../data.csv', mimetype='text/csv', as_attachment=True)
+                return send_file('data.csv', mimetype='text/csv', as_attachment=True)
             except ValueError as exc:
                 return render_template('index.html', error=f'Error: {exc}', 
                                         date_form=date_select,
                                         form=data_select)
 
-        start_date = None
-        end_date = None
         return render_template('index.html', date_form=date_select,
                                error='',
                                form=data_select)
@@ -42,6 +40,8 @@ def create_app():
     return app
 
 def validate_and_save_data(selected_data: List[str], start_date: datetime, end_date: datetime) -> None | ValueError:
+    if start_date >= end_date:
+        raise ValueError('End time must be before start time')
     data = get_venus_data(DATA_LOCATION, selected_data, start_date, end_date)
     data.to_csv('data.csv', index=False)
 
