@@ -185,14 +185,7 @@
         </form>
     </div>
 <script>
-/**
- * Load the list of available dates from the Flask endpoint and
- * initialise Flatpickr in “inline” mode (a static calendar).
- *
- * The user can click the first day and then the last day of a range.
- * The script will copy those dates into the hidden start/end fields
- * that the existing form already uses.
- */
+
 async function initAvailableCalendar() {
     const calendarEl = document.getElementById('date-calendar');
     const startInput  = document.getElementById('start_date');
@@ -217,15 +210,10 @@ async function initAvailableCalendar() {
     // -----------------------------------------------------------------
     flatpickr(calendarEl, {
         inline: true,
-        // Show week numbers – optional but handy for a data‑calendar
         weekNumbers: true,
-        // Allow the user to pick a *range* (first click = start, second = end)
         mode: "range",
         // Only enable the dates we actually have data for
         enable: availableDates,
-        // Highlight the enabled dates with a custom CSS class
-        // (Flatpickr already adds .flatpickr-day.enabled)
-        // We'll add a little extra colour below.
         onChange: function(selectedDates, dateStr, instance) {
             // `selectedDates` is an array of Date objects.
             // When the user has picked two dates we copy them into the form.
