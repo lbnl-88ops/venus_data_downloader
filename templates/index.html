@@ -3,6 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <title>VENUS Data Downloader</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     <style>
         /* ----------------------------------------------------------- */
         /*  Berkeley Lab colour palette                               */
@@ -131,7 +133,17 @@
             .form-wrapper { padding: 1rem; }
             .big-multiselect { height: 12rem; }
         }
+        /* Highlight the days that actually have data */
+        .flatpickr-day.enabled {
+            background: #e6f4ea;          /* light green – matches the “ok” box */
+            color: #0a7d3c;               /* dark green text */
+            border-radius: 50%;
+        }
+        .flatpickr-day.enabled:hover {
+            background: #c8e6d0;
+        }
     </style>
+
 </head>
 <body>
     <div class="form-wrapper">
@@ -147,6 +159,8 @@
             {% endfor %}
           {% endif %}
         {% endwith %}
+
+        <div id="date-calendar" style="margin-bottom:1.5rem;"></div>
 
         <form method="POST">
             {{ form.csrf_token }}
@@ -170,5 +184,77 @@
             <button type="submit">Download CSV</button>
         </form>
     </div>
+<script>
+/**
+ * Load the list of available dates from the Flask endpoint and
+ * initialise Flatpickr in “inline” mode (a static calendar).
+ *
+ * The user can click the first day and then the last day of a range.
+ * The script will copy those dates into the hidden start/end fields
+ * that the existing form already uses.
+ */
+async function initAvailableCalendar() {
+    const calendarEl = document.getElementById('date-calendar');
+    const startInput  = document.getElementById('start_date');
+    const endInput    = document.getElementById('end_date');
+
+    // -----------------------------------------------------------------
+    // 1️⃣  Fetch the JSON array of ISO dates from the backend
+    // -----------------------------------------------------------------
+    let availableDates = [];
+    try {
+        const resp = await fetch('/available_dates');
+        if (!resp.ok) throw new Error('Network error');
+        availableDates = await resp.json();   // e.g. ["2024-03-01","2024-03-02",…]
+    } catch (e) {
+        console.error('Could not load available dates:', e);
+        calendarEl.textContent = '⚠️  Unable to load calendar data.';
+        return;
+    }
+
+    // -----------------------------------------------------------------
+    // 2️⃣  Initialise Flatpickr
+    // -----------------------------------------------------------------
+    flatpickr(calendarEl, {
+        inline: true,
+        // Show week numbers – optional but handy for a data‑calendar
+        weekNumbers: true,
+        // Allow the user to pick a *range* (first click = start, second = end)
+        mode: "range",
+        // Only enable the dates we actually have data for
+        enable: availableDates,
+        // Highlight the enabled dates with a custom CSS class
+        // (Flatpickr already adds .flatpickr-day.enabled)
+        // We'll add a little extra colour below.
+        onChange: function(selectedDates, dateStr, instance) {
+            // `selectedDates` is an array of Date objects.
+            // When the user has picked two dates we copy them into the form.
+            if (selectedDates.length === 2) {
+                const [start, end] = selectedDates;
+                // Convert to the format the HTML5 <input type="datetime-local">
+                // expects: "YYYY-MM-DDTHH:MM"
+                const fmt = d => d.toISOString().slice(0,16);
+                startInput.value = fmt(start);
+                endInput.value   = fmt(end);
+                // Trigger the change event so the availability box updates
+                startInput.dispatchEvent(new Event('change'));
+                endInput.dispatchEvent(new Event('change'));
+            } else if (selectedDates.length === 1) {
+                // If only one day is selected, fill both fields with the same day
+                const d = selectedDates[0];
+                const fmt = d => d.toISOString().slice(0,16);
+                startInput.value = fmt(d);
+                endInput.value   = fmt(d);
+                startInput.dispatchEvent(new Event('change'));
+                endInput.dispatchEvent(new Event('change'));
+            }
+        }
+    });
+}
+
+// Run the init after the page has loaded
+document.addEventListener('DOMContentLoaded', initAvailableCalendar);
+</script>
+
 </body>
 </html>

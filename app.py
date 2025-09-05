@@ -1,7 +1,9 @@
 import os
 from pathlib import Path
 import tempfile
-from flask import (Flask, after_this_request, request, render_template, send_file, flash)
+from flask import (Flask, after_this_request, request, render_template, send_file, flash,
+                   jsonify)
+from helpers import all_available_dates
 from forms import DataSelectionForm, DateSelectionForm
 from ops.ecris.analysis.venus_data import get_venus_data
 from datetime import datetime
@@ -81,6 +83,10 @@ def create_app():
                              download_name=output_path.name)
 
         return render_template('index.html', date_form=date_form, form=data_form)
+
+    @app.route('/available_dates', methods=['GET'])
+    def available_dates():
+        return jsonify([d.date().isoformat() for d in all_available_dates(DATA_LOCATION)])
 
     return app
 
