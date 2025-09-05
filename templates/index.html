@@ -3,32 +3,46 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Date Range Picker</title>
-     <style>
-        body { font-family: Arial, sans-serif; margin: 2rem; }
-        .error { color: red; }
-        label { display: block; margin-top: 1rem; }
-        select { width: 100%; height: 8rem; }
-        button { margin-top: 1.5rem; padding: 0.5rem 1rem; }
-        .selector { width: 100%; size: auto;}
+    <title>VENUS Data Downloader</title>
+    <style>
+        body {font-family: Arial, sans-serif; margin: 2rem;}
+        .error {color: red;}
+        label {display: block; margin-top: 1rem;}
+        select {width: 100%; height: 8rem;}
+        button {margin-top: 1.5rem; padding: .5rem 1rem;}
+        .selector {width: 100%;}
+        .flash {margin: .5rem 0; padding: .5rem; border: 1px solid #ccc;}
+        .flash.error {background:#ffe6e6; border-color:#ff5c5c;}
     </style>
 </head>
 <body>
+    <h1>VENUS Data Downloader</h1>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, msg in messages %}
+          <div class="flash {{ category }}">{{ msg|safe }}</div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+
     {% if error %}
         <p class="error">{{ error }}</p>
     {% endif %}
 
-    <h1>VENUS Data Downloader</h1>
     <form method="POST">
+        {{ form.csrf_token }}
+
         <div>
-            {{ date_form.start_date.label}} {{date_form.start_date}}
-            {{ date_form.end_date.label}} {{date_form.end_date}}
+            {{ date_form.start_date.label }} {{ date_form.start_date(class="form-control") }}
+            {{ date_form.end_date.label }}   {{ date_form.end_date(class="form-control") }}
         </div>
 
         <div class="selector">
             {{ form.selected_options.label }}
-            {{ form.selected_options(multiple=True) }}
+            {{ form.selected_options(multiple=True, class="form-control") }}
         </div>
+
         <button type="submit">Download CSV</button>
     </form>
 </body>
