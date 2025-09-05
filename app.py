@@ -1,3 +1,4 @@
+import os
 from pathlib import Path
 from flask import Flask, render_template_string, request, render_template, send_file
 from forms import DataSelectionForm, DateSelectionForm
@@ -5,15 +6,23 @@ from ops.ecris.analysis.venus_data import get_venus_data
 from datetime import datetime
 from typing import List
 
+from ops.ecris.analysis import VenusDataError
+
 FMT = '%Y-%m-%d %H:%M:%S'
 DATA_LOCATION = Path('./data/venus')
+
+def _get_secret_key() -> str:
+    key = os.getenv("VENUS_SECRET_KEY")
+    if key:
+        return key
+    # pragma: no cover – this branch is only hit in dev
+    import secrets
+    return secrets.token_hex(32)
 
 def create_app():
     # create and configure the app
     app = Flask(__name__, instance_relative_config=True)
-    app.config.from_mapping(
-        SECRET_KEY='dev',
-    )
+    app.config.from_mapping( SECRET_KEY=_get_secret_key())
 
     @app.route('/', methods=['GET', 'POST'])
     def index():
@@ -28,8 +37,8 @@ def create_app():
             try:
                 validate_and_save_data(selected_data, start_date, end_date)
                 return send_file('data.csv', mimetype='text/csv', as_attachment=True)
-            except ValueError as exc:
-                return render_template('index.html', error=f'Error: {exc}', 
+            except VenusDataError as exc:
+                return render_template('index.html', error=f'Data error: {exc}', 
                                         date_form=date_select,
                                         form=data_select)
 
