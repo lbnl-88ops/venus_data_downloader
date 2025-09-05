@@ -1,5 +1,6 @@
 import os
 from pathlib import Path
+import tempfile
 from flask import (Flask, request, render_template, send_file, flash)
 from forms import DataSelectionForm, DateSelectionForm
 from ops.ecris.analysis.venus_data import get_venus_data
@@ -9,7 +10,8 @@ from typing import List
 from ops.ecris.analysis import VenusDataError
 
 FMT = '%Y-%m-%d %H:%M:%S'
-DATA_LOCATION = Path('./data/venus')
+BASE_DIR = Path(__file__).resolve().parent
+DATA_LOCATION = BASE_DIR / "data" / "venus"
 
 def _get_secret_key() -> str:
     key = os.getenv("VENUS_SECRET_KEY")
@@ -43,12 +45,16 @@ def create_app():
                 flash("Start date must be **before** end date.", "error")
                 return render_template("index.html", date_form=date_form, form=data_form)
             try:
-                validate_and_save_data(selected, start, end)
-                return send_file('data.csv', mimetype='text/csv', as_attachment=True)
+                output_path = _generate_output_file(selected, start, end)
             except VenusDataError as exc:
-                return render_template('index.html', error=f'Data error: {exc}', 
-                                        date_form=date_form,
-                                        form=data_form)
+                flash(f"Data error: {exc}")
+                return render_template('index.html', date_form=date_form, form=data_form)
+            except BaseException as exc:
+                flash(f"An unexpected error occured: {exc}")
+                return render_template('index.html', date_form=date_form, form=data_form)
+
+            return send_file(output_path, mimetype='text/csv', as_attachment=True, 
+                             download_name=output_path.name)
 
         return render_template('index.html', date_form=date_form,
                                error='',
@@ -56,14 +62,16 @@ def create_app():
 
     return app
 
-def validate_and_save_data(selected_data: List[str], start_date: datetime, end_date: datetime) -> None | ValueError:
-    if start_date >= end_date:
-        raise ValueError('End time must be before start time')
+def _generate_output_file(selected_data: List[str], start_date: datetime, end_date: datetime) -> Path:
+    tmp = tempfile.NamedTemporaryFile(mode='wb', suffix='.csv', delete=False, dir=BASE_DIR / "tmp")
+    tmp_path = Path(tmp.name)
+    tmp.close()
+
     data = get_venus_data(DATA_LOCATION, selected_data, start_date, end_date)
-    data.to_csv('data.csv', index=False)
-
-
+    data.to_csv(tmp_path, index=False)
+    return tmp_path
 
 if __name__ == '__main__':
+    (BASE_DIR / "tmp").mkdir(exist_ok=True)
     app = create_app()
     app.run()
