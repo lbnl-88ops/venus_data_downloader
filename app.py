@@ -12,6 +12,8 @@ from ops.ecris.analysis import VenusDataError
 FMT = '%Y-%m-%d %H:%M:%S'
 BASE_DIR = Path(__file__).resolve().parent
 DATA_LOCATION = BASE_DIR / "data" / "venus"
+TEMP_DIR = BASE_DIR / "tmp"
+TEMP_DIR.mkdir(exist_ok=True)
 
 def _get_secret_key() -> str:
     key = os.getenv("VENUS_SECRET_KEY")
@@ -35,7 +37,6 @@ def create_app():
                 for field, msgs in {**data_form.errors, **date_form.errors}.items():
                     for msg in msgs:
                         flash(f"{field}: {msg}", "error") 
-                    print('Error')
                     return render_template("index.html", date_form=date_form, form=data_form)
             start: datetime = date_form.start_date.data
             end: datetime = date_form.end_date.data
@@ -47,39 +48,36 @@ def create_app():
             try:
                 output_path = _generate_output_file(selected, start, end)
             except VenusDataError as exc:
-                flash(f"Data error: {exc}")
+                flash(f"Data error: {exc}", "error")
                 return render_template('index.html', date_form=date_form, form=data_form)
-            except BaseException as exc:
-                flash(f"An unexpected error occured: {exc}")
+            except Exception as exc:
+                flash(f"An unexpected error occured: {exc}", "error")
                 return render_template('index.html', date_form=date_form, form=data_form)
 
             @after_this_request
             def remove_temp_file(response):
                 try:
                     output_path.unlink()
-                except BaseException:
+                except Exception:
                     pass
                 return response
 
             return send_file(output_path, mimetype='text/csv', as_attachment=True, 
                              download_name=output_path.name)
 
-        return render_template('index.html', date_form=date_form,
-                               error='',
-                               form=data_form)
+        return render_template('index.html', date_form=date_form, form=data_form)
 
     return app
 
-def _generate_output_file(selected_data: List[str], start_date: datetime, end_date: datetime) -> Path:
-    tmp = tempfile.NamedTemporaryFile(mode='wb', suffix='.csv', delete=False, dir=BASE_DIR / "tmp")
+def _generate_output_file(selected: List[str], start_date: datetime, end_date: datetime) -> Path:
+    tmp = tempfile.NamedTemporaryFile(mode='w', suffix='.csv', delete=False, dir=TEMP_DIR)
     tmp_path = Path(tmp.name)
     tmp.close()
 
-    data = get_venus_data(DATA_LOCATION, selected_data, start_date, end_date)
+    data = get_venus_data(DATA_LOCATION, selected, start_date, end_date)
     data.to_csv(tmp_path, index=False)
     return tmp_path
 
 if __name__ == '__main__':
-    (BASE_DIR / "tmp").mkdir(exist_ok=True)
     app = create_app()
     app.run()
