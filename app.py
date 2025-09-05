@@ -6,6 +6,7 @@ from forms import DataSelectionForm, DateSelectionForm
 from ops.ecris.analysis.venus_data import get_venus_data
 from datetime import datetime
 from typing import List
+import logging
 
 from ops.ecris.analysis import VenusDataError
 
@@ -14,6 +15,16 @@ BASE_DIR = Path(__file__).resolve().parent
 DATA_LOCATION = BASE_DIR / "data" / "venus"
 TEMP_DIR = BASE_DIR / "tmp"
 TEMP_DIR.mkdir(exist_ok=True)
+
+_log = logging.getLogger(__name__)
+if not _log.handlers:  
+    handler = logging.StreamHandler()
+    formatter = logging.Formatter(
+        "%(asctime)s %(levelname)s %(name)s %(message)s"
+    )
+    handler.setFormatter(formatter)
+    _log.addHandler(handler)
+    _log.setLevel(logging.INFO)
 
 def _get_secret_key() -> str:
     key = os.getenv("VENUS_SECRET_KEY")
@@ -48,9 +59,11 @@ def create_app():
             try:
                 output_path = _generate_output_file(selected, start, end)
             except VenusDataError as exc:
+                _log.exception(f"VenusDataError while fetching data: {exc}")    
                 flash(f"Data error: {exc}", "error")
                 return render_template('index.html', date_form=date_form, form=data_form)
             except Exception as exc:
+                _log.exception(f"Unexpected error occured: {exc}")    
                 flash(f"An unexpected error occured: {exc}", "error")
                 return render_template('index.html', date_form=date_form, form=data_form)
 
@@ -58,8 +71,10 @@ def create_app():
             def remove_temp_file(response):
                 try:
                     output_path.unlink()
+                except FileNotFoundError:
+                    _log.debug(f"Temp file {output_path} already removed")
                 except Exception:
-                    pass
+                    _log.exception(f"Failed to delete temp file {output_path}")
                 return response
 
             return send_file(output_path, mimetype='text/csv', as_attachment=True, 
