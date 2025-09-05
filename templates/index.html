@@ -6,9 +6,7 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     <style>
-        /* ----------------------------------------------------------- */
         /*  Berkeley Lab colour palette                               */
-        /* ----------------------------------------------------------- */
         :root {
             --lab-blue:      #0033A0;
             --lab-orange:    #FF6600;
@@ -17,9 +15,7 @@
             --lab-white:     #FFFFFF;
         }
 
-        /* ----------------------------------------------------------- */
         /*  Page layout & typography                                   */
-        /* ----------------------------------------------------------- */
         body {
             font-family: Arial, Helvetica, sans-serif;
             margin: 2rem;
@@ -38,9 +34,7 @@
             font-weight: 600;
         }
 
-        /* ----------------------------------------------------------- */
         /*  Flash messages (info / error)                             */
-        /* ----------------------------------------------------------- */
         .flash {
             margin: .5rem 0;
             padding: .75rem 1rem;
@@ -58,9 +52,7 @@
             color: var(--lab-dark-gray);
         }
 
-        /* ----------------------------------------------------------- */
         /*  Form container                                            */
-        /* ----------------------------------------------------------- */
         .form-wrapper {
             background: var(--lab-white);
             padding: 1.5rem;
@@ -71,9 +63,7 @@
             box-shadow: 0 2px 6px rgba(0,0,0,0.08);
         }
 
-        /* ----------------------------------------------------------- */
         /*  Date‑time inputs (HTML5 <input type="datetime-local">)    */
-        /* ----------------------------------------------------------- */
         .form-control {
             width: 100%;
             padding: .4rem .6rem;
@@ -83,9 +73,7 @@
             box-sizing: border-box;
         }
 
-        /* ----------------------------------------------------------- */
         /*  Multiselect – larger & styled                              */
-        /* ----------------------------------------------------------- */
         .big-multiselect {
             width: 100%;
             min-width: 300px;          /* never shrink below this */
@@ -134,14 +122,14 @@
             .big-multiselect { height: 12rem; }
         }
         /* Highlight the days that actually have data */
-        .flatpickr-day.enabled {
+        .flatpickr-day {
             background: #e6f4ea;          /* light green – matches the “ok” box */
             color: #0a7d3c;               /* dark green text */
             border-radius: 50%;
         }
-        .flatpickr-day.enabled:hover {
-            background: #c8e6d0;
-        }
+        /* .flatpickr-day.enabled:hover { */
+            /* background: #c8e6d0; */
+        /* } */
     </style>
 
 </head>

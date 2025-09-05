@@ -91,10 +91,7 @@ def create_app():
     return app
 
 def _generate_output_file(selected: List[str], start_date: datetime, end_date: datetime) -> Path:
-    tmp = tempfile.NamedTemporaryFile(mode='w', suffix='.csv', delete=False, dir=TEMP_DIR)
-    tmp_path = Path(tmp.name)
-    tmp.close()
-
+    tmp_path = TEMP_DIR / f'venus_data_{datetime.strftime(datetime.now(), "%Y_%m_%d_%H%M%S")}.csv'
     data = get_venus_data(DATA_LOCATION, selected, start_date, end_date)
     data.to_csv(tmp_path, index=False)
     return tmp_path
