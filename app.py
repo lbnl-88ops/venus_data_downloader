@@ -1,7 +1,7 @@
 import os
 from pathlib import Path
 import tempfile
-from flask import (Flask, request, render_template, send_file, flash)
+from flask import (Flask, after_this_request, request, render_template, send_file, flash)
 from forms import DataSelectionForm, DateSelectionForm
 from ops.ecris.analysis.venus_data import get_venus_data
 from datetime import datetime
@@ -52,6 +52,14 @@ def create_app():
             except BaseException as exc:
                 flash(f"An unexpected error occured: {exc}")
                 return render_template('index.html', date_form=date_form, form=data_form)
+
+            @after_this_request
+            def remove_temp_file(response):
+                try:
+                    output_path.unlink()
+                except BaseException:
+                    pass
+                return response
 
             return send_file(output_path, mimetype='text/csv', as_attachment=True, 
                              download_name=output_path.name)
